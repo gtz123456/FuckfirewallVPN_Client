@@ -45,6 +45,6 @@ exe = EXE(
 app = BUNDLE(
     exe,
     name='client.app',
-    icon=None,
+    icon='/Users/gaotianzhou/Documents/firewall/fuckfirewall_client/ico.ico',
     bundle_identifier=None,
 )
