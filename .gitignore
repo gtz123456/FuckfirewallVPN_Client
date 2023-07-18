@@ -1,0 +1,8 @@
+.DS_Store
+
+/client_cmd.py
+user_config.json
+/resources/xray/config.json
+__*__
+/build/
+/dist/
