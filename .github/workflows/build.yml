@@ -30,7 +30,8 @@ jobs:
         pyinstaller client.spec
     - name: build dmg
       if: matrix.os == 'macos-latest'
-      run: git clone https://github.com/create-dmg/create-dmg.git
+      run: |
+        git clone https://github.com/create-dmg/create-dmg.git
         create-dmg/create-dmg \
           --volname "Client" \
           --volicon "ico.icns" \
