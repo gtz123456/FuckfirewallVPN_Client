@@ -6,4 +6,4 @@ user_config.json
 __*__
 /build/
 /dist/
-client.dmg
+*.dmg
