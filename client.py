@@ -14,7 +14,7 @@ class MyWidget(QtWidgets.QWidget):
         self.resize(245, 170)
         self.email, self.password = getUser()
         self.proxyIsOn = False
-        self.xrayPid = None
+        self.xrayProcess = None
         self.setup_ui()
 
     def setup_ui(self) -> None:
@@ -66,7 +66,7 @@ class MyWidget(QtWidgets.QWidget):
         self.button.clicked.connect(self.proxySwitch)
         saveUser(email, password)
         initRealityClientConfig('209.141.49.64', port, uuid, pubkey, shortid)
-        self.xrayPid = xrayOn()
+        self.xrayProcess = xrayOn()
         self.proxySwitch()
         
     def clearEmail(self):
@@ -82,8 +82,8 @@ class MyWidget(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         proxyOff()
-        if self.xrayPid:
-            xrayOff(self.xrayPid)
+        if self.xrayProcess:
+            xrayOff(self.xrayProcess.pid)
         event.accept()
 
 if __name__ == "__main__":

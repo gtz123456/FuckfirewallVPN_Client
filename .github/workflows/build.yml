@@ -1,13 +1,19 @@
 name: Build pyinstaller application
 
-on: push
+on: 
+  push:
+    tags:
+      - v**
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.9
@@ -18,9 +24,13 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyside6 requests pyinstaller
-    - name: Build dmg
+    - name: Install binutils for linux
+      run: apt install binutils
+    - name: pyinstaller
       run: | 
         pyinstaller client.spec
+    - name: build dmg
+      if: matrix.os == 'macos-latest'
         git clone https://github.com/create-dmg/create-dmg.git
         create-dmg/create-dmg \
           --volname "Client" \
@@ -33,9 +43,22 @@ jobs:
           "client.dmg" \
           "dist/client.app"
 
-    - name: Release
+    - name: Release for macos
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/') && ${{ matrix.os }} == macos-latest
       with:
         token: ${{ secrets.token }}
         files: client.dmg
+    - name: Release for windows
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/') && ${{ matrix.os }} == windows-latest
+      with:
+        token: ${{ secrets.token }}
+        files: dist/client.exe
+    - name: Release for linux
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/') && ${{ matrix.os }} == ubuntu-latest
+      with:
+        token: ${{ secrets.token }}
+        files: dist/client
+      

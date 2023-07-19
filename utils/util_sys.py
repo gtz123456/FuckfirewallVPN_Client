@@ -10,11 +10,7 @@ def source_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
  
- 
-# 修改当前工作目录，使得资源文件可以被正确访问
-BASE_DIR = source_path('')
-BASE_DIR = os.path.join(BASE_DIR, 'resources')
-#BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../resources')
+BASE_DIR = os.path.join(source_path(''), 'resources')
 XRAY_PATH = os.path.join(BASE_DIR, 'xray', 'xray')
 
 PLATFORM = sys.platform
@@ -54,7 +50,6 @@ def xrayOn():
     return xrayProcess#.pid
 
 def xrayOff(pid):
-    return
     os.popen('kill ' + str(pid))
 
 def xrayRestart(pid):
