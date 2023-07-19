@@ -21,8 +21,7 @@ jobs:
     - name: Build dmg
       run: | 
         pyinstaller client.spec
-        ls
-        pwd
+        git clone https://github.com/create-dmg/create-dmg.git
         create-dmg/create-dmg \
           --volname "Client" \
           --volicon "ico.icns" \
