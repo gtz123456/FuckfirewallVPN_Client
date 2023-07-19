@@ -6,4 +6,5 @@ user_config.json
 __*__
 /build/
 /dist/
+/create-dmg/
 *.dmg
