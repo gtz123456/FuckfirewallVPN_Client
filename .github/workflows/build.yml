@@ -21,7 +21,7 @@ jobs:
     - name: Build dmg
       run: | 
         pyinstaller client.spec
-        create-dmg/create-dmg \
+        ./create-dmg/create-dmg \
           --volname "Client" \
           --volicon "ico.icns" \
           --window-pos 10 20 \
