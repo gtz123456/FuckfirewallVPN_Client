@@ -64,9 +64,9 @@ class MyWidget(QtWidgets.QWidget):
 
         self.button.clicked.disconnect()
         self.button.clicked.connect(self.proxySwitch)
-        self.xrayPid = xrayOn()
         saveUser(email, password)
         initRealityClientConfig('209.141.49.64', port, uuid, pubkey, shortid)
+        self.xrayPid = xrayOn()
         self.proxySwitch()
         
     def clearEmail(self):

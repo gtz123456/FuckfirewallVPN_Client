@@ -1,0 +1,45 @@
+name: Build pyinstaller application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyside6 requests
+    - name: Build dmg
+      run: | 
+        pyinstaller client.spec
+        create-dmg/create-dmg \
+          --volname "Client" \
+          --volicon "ico.icns" \
+          --window-pos 10 20 \
+          --window-size 400 300 \
+          --icon-size 100 \
+          --icon "client.app" 100 50 \
+          --app-drop-link 300 50 \
+          "client.dmg" \
+          "dist/client.app"
+
+    - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: client.dmg
