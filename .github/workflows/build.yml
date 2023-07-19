@@ -1,9 +1,7 @@
 name: Build pyinstaller application
 
 on: 
-  push:
-    tags:
-      - v**
+  push
 
 permissions:
   contents: read
