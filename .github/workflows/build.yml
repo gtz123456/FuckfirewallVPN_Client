@@ -25,12 +25,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyside6 requests pyinstaller
     - name: Install binutils for linux
+      if: ${{ matrix.os }} == ubuntu-latest
       run: sudo apt-get install binutils
     - name: pyinstaller
       run: | 
         pyinstaller client.spec
     - name: build dmg
-      if: matrix.os == 'macos-latest'
+      if: ${{ matrix.os }} == macos-latest
       run: git clone https://github.com/create-dmg/create-dmg.git
         create-dmg/create-dmg \
           --volname "Client" \
