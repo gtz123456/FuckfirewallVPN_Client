@@ -3,9 +3,14 @@
 
 block_cipher = None
 
-from utils.util_sys import BASE_DIR
-
-resources = BASE_DIR.spilt('/')[-1]
+import sys
+PLATFORM = sys.platform
+if PLATFORM.startswith('win'):
+    resources = 'resources_windows'
+elif PLATFORM == 'darwin':
+    resources = 'resources_macos'
+else:
+    resources = 'resources_linux'
 
 a = Analysis(
     ['client.py'],
