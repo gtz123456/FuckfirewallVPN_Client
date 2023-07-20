@@ -7,10 +7,15 @@ import sys
 PLATFORM = sys.platform
 if PLATFORM.startswith('win'):
     resources = 'resources_windows'
+    ico = 'ico.ico'
 elif PLATFORM == 'darwin':
     resources = 'resources_macos'
+    ico = 'ico.icns'
 else:
     resources = 'resources_linux'
+    ico = 'ico.ico'
+
+
 
 a = Analysis(
     ['client.py'],
@@ -53,6 +58,6 @@ exe = EXE(
 app = BUNDLE(
     exe,
     name='client.app',
-    icon='ico.icns',
+    icon=ico,
     bundle_identifier=None,
 )

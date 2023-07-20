@@ -68,7 +68,7 @@ def proxyOff():
         pass #TODO
 
 def xrayOn():
-    xrayProcess = subprocess.Popen([os.path.join(BASE_DIR, 'xray', 'xray')], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    xrayProcess = subprocess.Popen([os.path.join(BASE_DIR, 'xray', 'xray')], stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
     return xrayProcess#.pid
 
 def xrayOff(pid):
