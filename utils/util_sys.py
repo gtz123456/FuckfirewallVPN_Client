@@ -3,7 +3,6 @@ import sys
 import subprocess
 
 def source_path(relative_path):
-    # 是否Bundle Resource
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
     else:
@@ -16,15 +15,39 @@ XRAY_PATH = os.path.join(BASE_DIR, 'xray', 'xray')
 PLATFORM = sys.platform
 if PLATFORM.startswith('win'):
     PLATFORM = 'windows'
+    BASE_DIR = os.path.join(source_path(''), 'resources_windows')
+    import winreg
 elif PLATFORM == 'darwin':
     PLATFORM = 'macos'
+    BASE_DIR = os.path.join(source_path(''), 'resources_macos')
 else:
     PLATFORM = 'linux'
+    BASE_DIR = os.path.join(source_path(''), 'resources_linux')
+
+def proxySwitchWindows(open=True):
+    proxy = "socks=127.0.0.1:1081"
+    root = winreg.HKEY_CURRENT_USER
+    proxy_path = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+    kv_Enable = [
+        (proxy_path, "ProxyEnable", 1, winreg.REG_DWORD),
+        (proxy_path, "ProxyServer", proxy, winreg.REG_SZ),
+    ]
+
+    kv_Disable = [
+        (proxy_path, "ProxyEnable", 0, winreg.REG_DWORD),
+        # (proxy_path, "ProxyServer", proxy, winreg.REG_SZ),
+    ]
+    if open:
+        kv = kv_Enable
+    else:
+        kv = kv_Disable
+    for keypath, value_name, value, value_type in kv:
+        hKey = winreg.CreateKey(root, keypath)
+        winreg.SetValueEx(hKey, value_name, 0, value_type, value)
 
 def proxyOn():
     if PLATFORM == 'windows':
-        sethttp = 'netsh winhttp set proxy 127.0.0.1 1080'
-        os.system(sethttp)
+        proxySwitchWindows()
     elif PLATFORM == 'macos':
         setSocks = 'networksetup -setsocksfirewallproxy Wi-Fi 127.0.0.1 1081'
         os.system(setSocks)
@@ -37,8 +60,7 @@ def proxyOn():
 
 def proxyOff():
     if PLATFORM == 'windows':
-        proxyOff = 'netsh winhttp reset proxy'
-        os.system(proxyOff)
+        proxySwitchWindows(False)
     elif PLATFORM == 'macos':
         proxyOff = 'networksetup -setsocksfirewallproxystate Wi-Fi off'
         os.system(proxyOff)
