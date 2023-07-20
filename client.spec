@@ -3,12 +3,15 @@
 
 block_cipher = None
 
+from utils.util_sys import BASE_DIR
+
+resources = BASE_DIR.spilt('/')[-1]
 
 a = Analysis(
     ['client.py'],
     pathex=[],
     binaries=[],
-    datas=[('resources', 'resources')],
+    datas=[(resources, resources)],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
