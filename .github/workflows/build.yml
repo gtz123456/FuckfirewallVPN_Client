@@ -34,7 +34,7 @@ jobs:
         git clone https://github.com/create-dmg/create-dmg.git
         create-dmg/create-dmg \
           --volname "Client" \
-          --volicon "ico.icns" \
+          --volicon "images/images/icon_blue.icns" \
           --window-pos 10 20 \
           --window-size 400 300 \
           --icon-size 100 \
