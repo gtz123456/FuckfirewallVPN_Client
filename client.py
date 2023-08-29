@@ -4,7 +4,7 @@ import os
 from PySide6 import QtGui, QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from utils.util_json import getUser, saveUser, initRealityClientConfig
-from utils.util_request import getUserConfig
+from utils.util_request import login
 from utils.util_sys import xrayOn, xrayOff, proxyOn, proxyOff
 
 class MyWidget(QtWidgets.QWidget):
@@ -37,6 +37,7 @@ class MyWidget(QtWidgets.QWidget):
         self.passwordInput.selectionChanged.connect(self.clearPasswoard)
         
         icon = QtGui.QIcon("../../../Resources/Icons/Python_128px.png")
+        
         self.button = QtWidgets.QPushButton(icon, "Login", self)
         self.button.resize(80, 30)
         self.button.move(86, 95)
@@ -56,7 +57,7 @@ class MyWidget(QtWidgets.QWidget):
     @QtCore.Slot()
     def login(self) -> None:
         email, password = self.emailInput.text(), self.passwordInput.text()
-        user = getUserConfig(email, password, 'http://lv.fuckfirewall.top')
+        user = login(email, password, 'http://lv.fuckfirewall.top')
         if not user:
             QtWidgets.QMessageBox.information(self, 'Message', 'Login failed.')
             return

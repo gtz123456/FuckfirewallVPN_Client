@@ -1,11 +1,15 @@
 import sys
 import os
+import threading
 import platform
+from datetime import datetime
 
 from PySide6 import QtGui, QtCore, QtWidgets
+from PySide6.QtWidgets import QApplication, QMainWindow, QSystemTrayIcon, QMenu
+
 from utils.util_json import getUser, saveUser, initRealityClientConfig
-from utils.util_request import getUserConfig
-from utils.util_sys import xrayOn, xrayOff, proxyOn, proxyOff
+from utils.util_request import login, register
+from utils.util_sys import xrayOn, xrayOff, xrayRestart, proxyOn, proxyOff
 from utils.util_static import serverIP
 
 # IMPORT / GUI AND MODULES AND WIDGETS
@@ -22,45 +26,29 @@ class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
-        # SET AS GLOBAL WIDGETS
-        # ///////////////////////////////////////////////////////////////
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         global widgets
         widgets = self.ui
+        UIFunctions.uiDefinitions(self)
 
-        # USE CUSTOM TITLE BAR | USE AS "False" FOR MAC OR LINUX
-        # ///////////////////////////////////////////////////////////////
-        Settings.ENABLE_CUSTOM_TITLE_BAR = True
+        #Settings.ENABLE_CUSTOM_TITLE_BAR = True
 
-        # APP NAME
-        # ///////////////////////////////////////////////////////////////
         title = "Fuckfirewall VPN"
         description = "Fuckfirewall VPN - A ease-to-use VPN client"
-        # APPLY TEXTS
         self.setWindowTitle(title)
         widgets.titleRightInfo.setText(description)
 
         widgets.toggleButton.clicked.connect(lambda: UIFunctions.toggleMenu(self, True)) # TOGGLE MENU
 
-        UIFunctions.uiDefinitions(self)
-
-        self.pages = {"btn_home": widgets.home, "btn_widgets": widgets.widgets, "btn_user": widgets.loginPage, "btn_settings": widgets.settingsPage}
+        self.pages = {"btn_home": widgets.home, "btn_user": widgets.loginPage, "btn_settings": widgets.settingsPage}
 
         widgets.btn_home.clicked.connect(self.leftBarButtonClick)
         widgets.btn_user.clicked.connect(self.leftBarButtonClick)
         widgets.btn_settings.clicked.connect(self.leftBarButtonClick)
 
-        # EXTRA LEFT BOX
-        def openCloseLeftBox():
-            UIFunctions.toggleLeftBox(self, True)
-        widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
-        widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
-
-        # EXTRA RIGHT BOX
-        def openCloseRightBox():
-            UIFunctions.toggleRightBox(self, True)
-        widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
+        widgets.minimizeAppBtn.clicked.disconnect()
+        widgets.minimizeAppBtn.clicked.connect(self.showSwitch)
 
         self.initLoginPage()
         self.initSettingsPage()
@@ -69,11 +57,44 @@ class MainWindow(QMainWindow):
         widgets.label_website.linkActivated.connect(lambda: QDesktopServices.openUrl(QUrl("http://www.fuckfirewall.top")))
 
         self.show()
+        self.initTray()
 
-        # SET HOME PAGE AND SELECT MENU
-        # ///////////////////////////////////////////////////////////////
-        widgets.stackedWidget.setCurrentWidget(widgets.home)
-        widgets.btn_home.setStyleSheet(UIFunctions.selectMenu(widgets.btn_home.styleSheet()))
+        widgets.stackedWidget.setCurrentWidget(widgets.loginPage)
+        widgets.btn_user.setStyleSheet(UIFunctions.selectMenu(widgets.btn_user.styleSheet()))
+
+    def initTray(self):
+        self.trayIcon = QSystemTrayIcon(self)
+        self.trayIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxInformation))
+
+        self.trayMenu = QMenu(self)
+
+        self.showAction = QAction("Hide", self)
+        self.proxySwitchAction = QAction("Proxy on", self)
+        self.quitAction = QAction("Quit", self)
+
+        self.proxySwitchAction.setEnabled(False)
+
+        self.hideStatus = False
+        self.trayMenu.addAction(self.showAction)
+        self.trayMenu.addAction(self.proxySwitchAction)
+        self.trayMenu.addAction(self.quitAction)
+
+        self.trayIcon.setContextMenu(self.trayMenu)
+        self.trayIcon.show()
+
+        self.showAction.triggered.connect(self.showSwitch)
+        self.proxySwitchAction.triggered.connect(self.proxySwitch)
+        self.quitAction.triggered.connect(self.quit)
+
+    def showSwitch(self):
+        if self.hideStatus:
+            self.showNormal()
+            self.showAction.setText('Hide')
+        else:
+            #self.setWindowFlags(self.windowFlags() | Qt.Tool)
+            self.hide()
+            self.showAction.setText('Show')
+        self.hideStatus = not self.hideStatus
 
     def initLoginPage(self):
         self.email, self.password = getUser()
@@ -82,12 +103,14 @@ class MainWindow(QMainWindow):
 
         if self.email:
             widgets.emailInput.setText(self.email)
-        widgets.emailInput.focusInEvent = self.clearEmail
+        else:
+            widgets.emailInput.focusInEvent = self.clearEmail
 
         if self.password:
             widgets.passwordInput.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
             widgets.passwordInput.setText(self.password)
-        widgets.passwordInput.focusInEvent = self.clearPasswoard
+        else:
+            widgets.passwordInput.focusInEvent = self.clearPasswoard
         
         widgets.btn_login.clicked.connect(self.login)
         widgets.btn_register.clicked.connect(self.register)
@@ -95,13 +118,13 @@ class MainWindow(QMainWindow):
     def clearEmail(self, event):
         if widgets.emailInput.text() == 'Email':
             widgets.emailInput.clear()
-        widgets.emailInput.selectionChanged.disconnect()
+        widgets.emailInput.focusInEvent = None
 
     def clearPasswoard(self, event):
         if widgets.passwordInput.text() == 'Password':
             widgets.passwordInput.clear()
             widgets.passwordInput.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
-        widgets.passwordInput.selectionChanged.connect(self.clearPasswoard)
+        widgets.passwordInput.focusInEvent = None
 
     def leftBarButtonClick(self):
         btn = self.sender()
@@ -118,36 +141,58 @@ class MainWindow(QMainWindow):
         self.dragPos = event.globalPos()
 
     def closeEvent(self, event):
+        self.quit()
+    
+    def quit(self):
         proxyOff()
         if self.xrayProcess:
             xrayOff(self.xrayProcess.pid)
-        event.accept()
+        self.xrayLogOn = False
+        QApplication.quit()
 
     # -----------------------------------
     # below are methods for functionality
     # -----------------------------------
     @QtCore.Slot()
     def register(self):
-        return
+        email, password = widgets.emailInput.text(), widgets.passwordInput.text()
+        result = register(email, password, 0, serverIP)
+        if result == 'Register success.':
+            self.login()
+        else:
+            QtWidgets.QMessageBox.information(self, 'Message', result)
 
     @QtCore.Slot()
     def login(self) -> None:
         email, password = widgets.emailInput.text(), widgets.passwordInput.text()
-        user = getUserConfig(email, password, serverIP)
+        user = login(email, password, serverIP)
         if not user:
             QtWidgets.QMessageBox.information(self, 'Message', 'Login failed.')
             return
-        port, uuid, pubkey, shortid = user
+        port, uuid, pubkey, shortid, balance, expireOn, referralCode = user['port'], user['uuid'], user['pubkey'], user['shortid'], user['balance'], user['expireOn'], user['referralCode']
 
         saveUser(email, password)
         initRealityClientConfig(serverIP, port, uuid, pubkey, shortid)
         self.xrayProcess = xrayOn()
+        self.xrayLogOn = True
+
+        self.xrayLogUpdateThread = threading.Thread(target=self.xrayLogUpdater)
+        self.xrayLogUpdateThread.start()
         self.proxySwitch()
+
+        self.refreshAccountStatus(email, balance, expireOn, referralCode)
+        self.proxySwitchAction.setEnabled(True)
         self.userPageSwitch()
 
-        # select function page
+    # select function page
     def userPageSwitch(self):
-        self.pages["btn_user"] = widgets.functionPage if self.pages["btn_user"] == widgets.loginPage else widgets.loginPage
+        if self.pages["btn_user"] == widgets.loginPage:
+            self.proxySwitchAction.setEnabled(True)
+            self.pages["btn_user"] = widgets.functionPage
+        else:
+            self.proxySwitchAction.setEnabled(False)
+            xrayOff(self.xrayProcess.pid)
+            self.pages["btn_user"] = widgets.loginPage
         widgets.stackedWidget.setCurrentWidget(self.pages["btn_user"])
 
     # ---------------------------
@@ -161,7 +206,7 @@ class MainWindow(QMainWindow):
 
         # 在末尾插入一行
         widgets.table_servers.insertRow(current_row)
-        row_data = ["第三行数据-列1", "第三行数据-列2", "第三行数据-列3"]
+        row_data = ["209.141.49.64", "0 ms", "0 mbps"]
         # 设置每个单元格的数据
         for column, data in enumerate(row_data):
             item = QTableWidgetItem(data)
@@ -169,18 +214,27 @@ class MainWindow(QMainWindow):
 
         widgets.table_servers.itemClicked.connect(lambda item: widgets.table_servers.selectRow(item.row()))
 
+    def refreshAccountStatus(self, email, balance, expireOn, referralCode):
+        widgets.label_currentUser.setText(f'Current user: {email}')
+        widgets.label_balance.setText(f'Balance: {balance}')
+
+        expireOn = datetime.now() - datetime.utcnow() + datetime.strptime(expireOn, '%Y-%m-%d %H:%M')
+        widgets.label_expireOn.setText(f'Expire on: {expireOn.strftime("%Y-%m-%d %H:%M")}')
+        widgets.label_referralCode.setText(f'Referral code: {referralCode}')
+
     def logout(self):
         self.userPageSwitch()
 
     def proxySwitch(self):
         if self.proxyIsOn:
             widgets.btn_proxySwitch.setText('Proxy On')
+            self.proxySwitchAction.setText('Proxy On')
             proxyOff()
-            self.proxyIsOn = False
         else:
             widgets.btn_proxySwitch.setText('Proxy Off')
+            self.proxySwitchAction.setText('Proxy Off')
             proxyOn()
-            self.proxyIsOn = True
+        self.proxyIsOn = not self.proxyIsOn
 
     # ---------------------------
     # below are for settings page
@@ -192,6 +246,12 @@ class MainWindow(QMainWindow):
         themeFile = "themes/py_dracula_light.qss" if state == 0 else "themes/py_dracula_dark.qss"
         UIFunctions.theme(self, themeFile, True)
         AppFunctions.setThemeHack(self)
+
+    def xrayLogUpdater(self):
+        while self.xrayLogOn:
+            for line in iter(self.xrayProcess.stdout.readline, b''):
+                output = line.decode('utf-8')
+                widgets.textEdit_xrayLog.append(output.strip())
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
