@@ -72,7 +72,10 @@ def xrayOn():
     return xrayProcess#.pid
 
 def xrayOff(pid):
-    os.popen('kill ' + str(pid))
+    if PLATFORM == 'windows':
+        os.system('taskkill /f /t /im xray.exe')
+    else:
+        os.popen('kill ' + str(pid))
 
 def xrayRestart(pid):
     xrayOff(pid)

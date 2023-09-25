@@ -3,22 +3,9 @@
 
 block_cipher = None
 
-block_cipher = None
-
-import sys
-PLATFORM = sys.platform
-if PLATFORM.startswith('win'):
-    resources = 'resources_windows'
-    ico = 'images/images/icon_blue.ico'
-elif PLATFORM == 'darwin':
-    resources = 'resources_macos'
-    ico = 'images/images/icon_blue.icns'
-else:
-    resources = 'resources_linux'
-    ico = 'images/images/icon_blue.ico'
 
 a = Analysis(
-    ['client.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -37,27 +24,21 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
     [],
-    exclude_binaries=True,
-    name='client',
+    name='main',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-)
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='client',
 )

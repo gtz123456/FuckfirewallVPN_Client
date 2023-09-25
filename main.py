@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         self.initSettingsPage()
         self.initFunctionPage()
 
-        widgets.label_website.linkActivated.connect(lambda: QDesktopServices.openUrl(QUrl("http://www.fuckfirewall.top")))
+        widgets.label_website.linkActivated.connect(lambda: QDesktopServices.openUrl(QUrl("http://www.lv.fuckfirewall.top")))
 
         self.show()
         self.initTray()
@@ -172,7 +172,7 @@ class MainWindow(QMainWindow):
         port, uuid, pubkey, shortid, balance, expireOn, referralCode = user['port'], user['uuid'], user['pubkey'], user['shortid'], user['balance'], user['expireOn'], user['referralCode']
 
         saveUser(email, password)
-        initRealityClientConfig(serverIP, port, uuid, pubkey, shortid)
+        initRealityClientConfig(serverIP, 8888, uuid, pubkey, shortid) # TODO
         self.xrayProcess = xrayOn()
         self.xrayLogOn = True
 
@@ -223,6 +223,7 @@ class MainWindow(QMainWindow):
         widgets.label_referralCode.setText(f'Referral code: {referralCode}')
 
     def logout(self):
+        self.proxySwitch()
         self.userPageSwitch()
 
     def proxySwitch(self):
