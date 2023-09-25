@@ -27,7 +27,7 @@ jobs:
       run: sudo apt-get install binutils
     - name: pyinstaller
       run: | 
-        pyinstaller client.spec
+        pyinstaller main.spec 
     - name: build dmg
       if: matrix.os == 'macos-latest'
       run: |
