@@ -12,7 +12,7 @@ def register(email, password, refer, address):
         'password': password,
         'refer': refer
     }
-    response = requests.post(f'https://{address}/api/register', data=userData, verify=False)
+    response = requests.post(f'http://{address}:8000/api/register', data=userData, verify=False)
     if response.status_code == 200:
         return response.json()['result']
         
@@ -20,7 +20,7 @@ def register(email, password, refer, address):
 
 
 def getToken(email, password, address):
-    response = requests.post(f'https://{address}/api/tokens', auth=(email, password), verify=False)
+    response = requests.post(f'http://{address}:8000/api/tokens', auth=(email, password), verify=False)
     print(response.content)
     if response.status_code == 200:
         token = response.json().get('token')
@@ -30,7 +30,7 @@ def getToken(email, password, address):
 
 def getConfig(token, address):
     headers = {'Authorization': f'Bearer {token}'}
-    config = requests.get(f'https://{address}/api/config', headers=headers, verify=False)
+    config = requests.get(f'http://{address}:8000/api/config', headers=headers, verify=False)
     if config.status_code == 200:
         return config.json()
     else:

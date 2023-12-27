@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         self.initSettingsPage()
         self.initFunctionPage()
 
-        widgets.label_website.linkActivated.connect(lambda: QDesktopServices.openUrl(QUrl("http://www.lv.fuckfirewall.top")))
+        widgets.label_website.linkActivated.connect(lambda: QDesktopServices.openUrl(QUrl("http://www.la.fuckfirewall.top")))
 
         self.show()
         self.initTray()
@@ -166,13 +166,14 @@ class MainWindow(QMainWindow):
     def login(self) -> None:
         email, password = widgets.emailInput.text(), widgets.passwordInput.text()
         user = login(email, password, serverIP)
+        print(user)
         if not user:
             QtWidgets.QMessageBox.information(self, 'Message', 'Login failed.')
             return
         port, uuid, pubkey, shortid, balance, expireOn, referralCode = user['port'], user['uuid'], user['pubkey'], user['shortid'], user['balance'], user['expireOn'], user['referralCode']
-
+        print(port, uuid, pubkey, shortid, balance, expireOn, referralCode)
         saveUser(email, password)
-        initRealityClientConfig(serverIP, 8888, uuid, pubkey, shortid) # TODO
+        initRealityClientConfig(serverIP, port, uuid, pubkey, shortid) # TODO
         self.xrayProcess = xrayOn()
         self.xrayLogOn = True
 
